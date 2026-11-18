@@ -1,19 +1,18 @@
-# Campus Safety Hub - Mau thiet ke Adapter + Observer + Mediator
+# Campus Safety Hub - Mẫu thiết kế Adapter + Observer + Mediator
 
-## Thong tin sinh vien
-- Ma sinh vien: <MSSV>
-- Ho ten: <HỌ TÊN>
-- GitHub repo: <URL repo hoac de trong neu chua co>
+## Thông tin sinh viên
+- Mã sinh viên: 202418872
+- Họ tên: Nguyễn Minh Đức
 
-## Mo ta
-Chuong trinh (.NET 8, C# 12, nullable enabled) mo phong trung hop giams sat an toan phong may. Khong GUI, khong CSDL, khong mang, khong gui email thong. Trong tam la thiet ke doi tuong va luong tuong thong.
+## Mô tả
+Chương trình (.NET 8, C# 12, bật chế độ nullable) mô phỏng trung tâm giám sát an toàn phòng máy. Không giao diện đồ họa (GUI), không cơ sở dữ liệu (CSDL), không kết nối mạng, không gửi email thật. Trọng tâm là thiết kế hướng đối tượng và luồng truyền thông giữa các thành phần.
 
-Luong tong quat:
+Luồng tổng quát:
 LegacySmokeDetector -> SmokeSensorAdapter (ISensor) -> SensorMonitor --AlertEvent-->
   DashboardObserver, EmailAlertObserver, AuditLogObserver, EmergencyBridgeObserver
 EmergencyBridgeObserver --Notify("FIRE_DETECTED")--> EmergencyMediator --> Alarm, DoorController, VentilationController
 
-## Cau truc thu muc
+## Cấu trúc thư mục
 CampusSafetyHub/
   CampusSafetyHub.csproj
   Program.cs
@@ -25,32 +24,27 @@ docs/ClassDiagram.mmd, ClassDiagram.png, run-output.txt
 README.md
 .gitignore
 
-## Cach chay
+## Cách chạy
 dotnet build CampusSafetyHub\CampusSafetyHub.csproj
 dotnet run --project CampusSafetyHub\CampusSafetyHub.csproj
 
-## Quy uoc muc do (SensorMonitor quyet duyen)
-- gia tri < 50 -> khong canh bao
+## Quy ước mức độ (SensorMonitor quyết định)
+- giá trị < 50 -> không cảnh báo
 - 50 <= v < 70 -> WARNING
 - v >= 70 -> CRITICAL
 
-## Cac pattern su dung
-1. Adapter: SmokeSensorAdapter bao dung (composition) LegacySmokeDetector, bien doi giao diện LegacySmokeDetector sang ISensor. ReadValue = GetSmokeLevel() / 10.0 (0..1000 -> 0..100%), GetUnit = "% smoke".
-2. Observer: SensorMonitor la subject, cac observer (Dashboard, Email, Audit, EmergencyBridge) dang ky qua IAlertObserver. SensorMonitor khong biet observer cu the.
-3. Mediator: EmergencyMediator dieu phoi Alarm, DoorController, VentilationController. Cac thiet bi khong tham chieu nhau, chi mediator biet ca ba.
+## Các pattern sử dụng
+1. Adapter: SmokeSensorAdapter bọc dùng (composition) LegacySmokeDetector, biến đổi giao diện LegacySmokeDetector sang ISensor. ReadValue = GetSmokeLevel() / 10.0 (0..1000 -> 0..100%), GetUnit = "% smoke".
+2. Observer: SensorMonitor là subject, các observer (Dashboard, Email, Audit, EmergencyBridge) đăng ký qua IAlertObserver. SensorMonitor không biết lớp observer cụ thể.
+3. Mediator: EmergencyMediator điều phối Alarm, DoorController, VentilationController. Các thiết bị không tham chiếu lẫn nhau, chỉ mediator biết cả ba.
 
-## 4 cau hoi thiet ke (xem chi tiet trong bao cao)
-1. Adapter nen ke thua hay chua LegacySmokeDetector? -> Chua (composition), vi LegacySmokeDetector la sealed khong ke thua duoc; ưu tiên composition hon ke thua.
-2. SensorMonitor co nen biet EmailAlertObserver cu the khong? -> Khong; chi phu thuoc IAlertObserver -> Open/Closed.
-3. Alarm co can tham chieu DoorController khong? -> Khong; moi phep hop qua EmergencyMediator -> giam coupling.
-4. Ai quyet duyen gia tri vuot ngưỡng? -> SensorMonitor, vi ngưỡng la chinh pham giamsat, khong phai cua sensor hay observer.
+## 4 câu hỏi thiết kế (xem chi tiết trong báo cáo)
+1. Adapter nên kế thừa hay chứa LegacySmokeDetector? -> Chứa (composition), vì LegacySmokeDetector là sealed nên không kế thừa được; ưu tiên composition hơn kế thừa.
+2. SensorMonitor có nên biết EmailAlertObserver cụ thể không? -> Không; chỉ phụ thuộc IAlertObserver -> đảm bảo nguyên tắc Open/Closed.
+3. Alarm có cần tham chiếu DoorController không? -> Không; mọi sự phối hợp đều thông qua EmergencyMediator -> giảm coupling.
+4. Ai quyết định giá trị vượt ngưỡng? -> SensorMonitor, vì ngưỡng cảnh báo là chính sách giám sát của hệ thống, không thuộc trách nhiệm của sensor hay observer.
 
-## Ket qua build & chay
+## Kết quả build & chạy
 - dotnet build: 0 warning, 0 error.
 - dotnet run: 31 test PASS, 0 FAIL.
-- Output luu tai docs/run-output.txt.
-
-## De bai (can tien hanh)
-- Dien MSSV va ho ten vao header moi file .cs vao README/bao cao.
-- Neu co remote GitHub, push len repo va cap nhat link GitHub vao header/bao cao.
-- Tao bao cao nop bai: BaoCao_<MSSV>.docx (xem yeu cau trong de bai).
+- Output lưu tại docs/run-output.txt.
