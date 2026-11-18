@@ -1,0 +1,101 @@
+classDiagram
+    %% ===================== PATTERN: ADAPTER =====================
+    class ISensor {
+        <<interface>>
+        +ReadValue() double
+        +GetUnit() string
+    }
+    class LegacySmokeDetector {
+        -smokeLevel int
+        +LegacySmokeDetector(initialSmokeLevel int)
+        +GetSmokeLevel() int
+        +GetDescription() string
+        +SetSmokeLevel(value int) void
+    }
+    class SmokeSensorAdapter {
+        -legacy LegacySmokeDetector
+        +SmokeSensorAdapter(legacy LegacySmokeDetector)
+        +ReadValue() double
+        +GetUnit() string
+    }
+    ISensor <|.. SmokeSensorAdapter : implements
+    SmokeSensorAdapter *-- LegacySmokeDetector : composition (readonly)
+
+    %% ===================== PATTERN: OBSERVER =====================
+    class AlertEvent {
+        <<record>>
+        +SensorName string
+        +Value double
+        +Unit string
+        +Severity string
+        +OccurredAt DateTime
+    }
+    class IAlertObserver {
+        <<interface>>
+        +Update(alertEvent AlertEvent) void
+    }
+    class SensorMonitor {
+        -observers List~IAlertObserver~
+        +Attach(observer IAlertObserver) void
+        +Detach(observer IAlertObserver) void
+        +CheckSensor(sensorName string, sensor ISensor) void
+    }
+    class DashboardObserver {
+        +Update(alertEvent AlertEvent) void
+    }
+    class EmailAlertObserver {
+        -recipient string
+        +EmailAlertObserver(recipient string)
+        +Update(alertEvent AlertEvent) void
+    }
+    class AuditLogObserver {
+        -logs List~string~
+        +Logs IReadOnlyList~string~
+        +Update(alertEvent AlertEvent) void
+    }
+    class EmergencyBridgeObserver {
+        -mediator IEmergencyMediator
+        +EmergencyBridgeObserver(mediator IEmergencyMediator)
+        +Update(alertEvent AlertEvent) void
+    }
+    IAlertObserver <|.. DashboardObserver : implements
+    IAlertObserver <|.. EmailAlertObserver : implements
+    IAlertObserver <|.. AuditLogObserver : implements
+    IAlertObserver <|.. EmergencyBridgeObserver : implements
+    SensorMonitor o-- IAlertObserver : danh sach observers
+    SensorMonitor ..> AlertEvent : tao su kien
+    SensorMonitor ..> ISensor : kiem tra cam bien
+
+    %% ===================== PATTERN: MEDIATOR =====================
+    class IEmergencyMediator {
+        <<interface>>
+        +Notify(sender object, eventName string) void
+    }
+    class EmergencyMediator {
+        -alarm Alarm
+        -doorController DoorController
+        -ventilationController VentilationController
+        -fireActive bool
+        +EmergencyMediator(alarm, door, vent)
+        +Notify(sender object, eventName string) void
+    }
+    class Alarm {
+        +IsActive bool
+        +Activate() void
+        +Deactivate() void
+    }
+    class DoorController {
+        +IsUnlocked bool
+        +Unlock() void
+        +Lock() void
+    }
+    class VentilationController {
+        +IsExhaustRunning bool
+        +StartExhaust() void
+        +Stop() void
+    }
+    IEmergencyMediator <|.. EmergencyMediator : implements
+    EmergencyMediator *-- Alarm : dieu phoi
+    EmergencyMediator *-- DoorController : dieu phoi
+    EmergencyMediator *-- VentilationController : dieu phoi
+    EmergencyBridgeObserver ..> IEmergencyMediator : goi Notify FIRE_DETECTED
